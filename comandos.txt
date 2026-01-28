@@ -1,0 +1,8 @@
+//comando para instalar las librerias 
+pip install -r requirements.txt
+
+//comando para buscar las liberias instaladas e ponerlas en el txt
+pip freeze > requirements.txt
+
+//Comando para ejecutarlo con fastapi
+fastapi dev main.py  
