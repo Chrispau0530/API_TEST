@@ -7,4 +7,6 @@ class Rols(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String(60))
     estatus = Column(Boolean)
+
+
     

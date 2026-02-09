@@ -1,9 +1,8 @@
 '''
 Docstring for models.cliente
 '''
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Date , ForeignKey
-from sqlalchemy.orm import relationship
-from config.db import Base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from config.db  import Base
 
 class Cliente(Base):
     ''' Docstring for Cliente'''
@@ -13,7 +12,7 @@ class Cliente(Base):
     papellido = Column(String(60))
     sapellido = Column(String(60))
     direccion = Column(String(60))
-    telefono = Column(String(10))   
+    telefono = Column(String(10))
     estatus = Column(Boolean)
     fecha_registro = Column(DateTime)
     fecha_modificacion = Column(DateTime)

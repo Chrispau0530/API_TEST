@@ -1,8 +1,5 @@
-'''
-Docstring for models.servicio
-'''
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Date , ForeignKey
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from config.db import Base
 class Servicio(Base):
     ''' Docstring for Servicio'''

@@ -6,3 +6,6 @@ pip freeze > requirements.txt
 
 //Comando para ejecutarlo con fastapi
 fastapi dev main.py  
+
+//Comando para ejecutarlo ocon pylint
+pylint ./schemas/schemarol.py 
