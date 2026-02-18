@@ -6,6 +6,7 @@ usando SQLAlchemy con los modelos del proyecto.
 from sqlalchemy.orm import Session
 from datetime import datetime
 
+
 # Importar modelos
 from models.model_user import User
 from models.modelcliente import Cliente
