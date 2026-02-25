@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS tbb_users (
     papellido VARCHAR(60) NOT NULL,
     sapellido VARCHAR(60),
     usuario VARCHAR(60) UNIQUE NOT NULL,
-    contrasena VARCHAR(60) NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
     telefono VARCHAR(10),
     estatus BOOLEAN DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,

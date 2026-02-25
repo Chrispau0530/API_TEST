@@ -1,49 +1,46 @@
 """
-Ejemplo de aplicación FastAPI con conexión a base de datos.
-Este archivo muestra cómo estructurar una API REST con los modelos y esquemas.
+API Autolavado - CRUD COMPLETO + Seguridad JWT
 """
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 
-# Importar configuración de BD
+# DB
 from database import get_db
 from db_utils import initialize_database, test_connection
 
-# Importar modelos
+# Modelos
 from models.modelrol import Rols
 from models.model_user import User
 from models.modelcliente import Cliente
 from models.modelservicio import Servicio
 from models.vehiculos import Vehiculo
-from models.serviciovehiculo import ServicioVehiculo
 
-# Importar esquemas (Pydantic)
+# Seguridad
+from security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user
+)
+
+# Schemas
 from schemas.schemarol import SchemaRol
 from schemas.schemauser import UserCreate, UserUpdate, UserRead
 from schemas.schemacliente import ClienteCreate, ClienteUpdate, ClienteRead
 from schemas.schemaservicio import ServicioCreate, ServicioUpdate, ServicioRead
 from schemas.schemavehiculo import VehiculoCreate, VehiculoUpdate, VehiculoRead
-from schemas.schemaserviciovehiculo import (
-    ServicioVehiculoCreate, 
-    ServicioVehiculoUpdate, 
-    ServicioVehiculoRead
-)
 
-# ============================================================================
-# CONFIGURACIÓN DE LA APLICACIÓN
-# ============================================================================
+# ======================================================
+# APP CONFIG
+# ======================================================
 
-app = FastAPI(
-    title="API Autolavado",
-    description="API para gestión de autolavado",
-    version="1.0.0"
-)
+app = FastAPI(title="API Autolavado CRUD Completo")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,271 +49,396 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================================================================
-# EVENTOS DE INICIO Y CIERRE
-# ============================================================================
+# ======================================================
+# STARTUP
+# ======================================================
 
 @app.on_event("startup")
-def startup_event():
-    """Se ejecuta al iniciar la aplicación"""
-    print("\n🚀 Iniciando aplicación...")
+def startup():
     if test_connection():
-        print("✓ Base de datos conectada")
         initialize_database()
-        print("✓ Base de datos inicializada")
-    else:
-        print("⚠️ Advertencia: No se pudo conectar a la base de datos")
 
-@app.on_event("shutdown")
-def shutdown_event():
-    """Se ejecuta al cerrar la aplicación"""
-    print("\n🛑 Cerrando aplicación...")
+# ======================================================
+# LOGIN
+# ======================================================
 
-# ============================================================================
-# ENDPOINTS DE SALUD
-# ============================================================================
+@app.post("/login", tags=["Autenticación"])
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.usuario == form_data.username).first()
 
-@app.get("/")
-def read_root():
-    """Endpoint raíz"""
-    return {
-        "mensaje": "Bienvenido a API Autolavado",
-        "versión": "1.0.0",
-        "documentación": "/docs"
-    }
+    if not user or not verify_password(form_data.password, user.contrasena):
+        raise HTTPException(status_code=400, detail="Credenciales incorrectas")
 
-@app.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    """Verificar estado de la aplicación y BD"""
-    try:
-        # Intentar una query simple
-        db.execute("SELECT 1")
-        return {
-            "estado": "✓ Saludable",
-            "base_datos": "✓ Conectada"
-        }
-    except Exception as e:
-        return {
-            "estado": "✗ Error",
-            "error": str(e)
-        }
+    token = create_access_token(data={"sub": user.usuario})
+    return {"access_token": token, "token_type": "bearer"}
 
-# ============================================================================
-# ENDPOINTS DE ROLES
-# ============================================================================
+# ======================================================
+# ROLES CRUD
+# ======================================================
 
-@app.get("/roles/", tags=["Roles"])
-def obtener_roles(db: Session = Depends(get_db)):
-    """Obtener todos los roles"""
-    roles = db.query(Rols).all()
-    return roles
+@app.get("/roles/", response_model=List[SchemaRol], tags=["Roles"])
+def get_roles(db: Session = Depends(get_db),
+              current_user: User = Depends(get_current_user)):
+    return db.query(Rols).all()
 
-@app.post("/roles/", tags=["Roles"])
-def crear_rol(rol: SchemaRol, db: Session = Depends(get_db)):
-    """Crear un nuevo rol"""
-    nuevo_rol = Rols(
-        description=rol.nombre,
-        estatus=rol.estado
-    )
-    db.add(nuevo_rol)
-    db.commit()
-    db.refresh(nuevo_rol)
-    return nuevo_rol
 
-@app.get("/roles/{rol_id}", tags=["Roles"])
-def obtener_rol(rol_id: int, db: Session = Depends(get_db)):
-    """Obtener un rol por ID"""
-    rol = db.query(Rols).filter(Rols.id == rol_id).first()
+@app.get("/roles/{id}", response_model=SchemaRol, tags=["Roles"])
+def get_rol(id: int, db: Session = Depends(get_db),
+            current_user: User = Depends(get_current_user)):
+    rol = db.query(Rols).filter(Rols.id == id).first()
     if not rol:
-        raise HTTPException(status_code=404, detail="Rol no encontrado")
+        raise HTTPException(404, "Rol no encontrado")
     return rol
 
-# ============================================================================
-# ENDPOINTS DE USUARIOS
-# ============================================================================
+
+@app.post("/roles/", response_model=SchemaRol, tags=["Roles"])
+def create_rol(rol: SchemaRol, db: Session = Depends(get_db),
+               current_user: User = Depends(get_current_user)):
+    nuevo = Rols(description=rol.nombre, estatus=rol.estado)
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+
+@app.put("/roles/{id}", response_model=SchemaRol, tags=["Roles"])
+def update_rol(id: int, rol_data: SchemaRol,
+               db: Session = Depends(get_db),
+               current_user: User = Depends(get_current_user)):
+    rol = db.query(Rols).filter(Rols.id == id).first()
+    if not rol:
+        raise HTTPException(404, "Rol no encontrado")
+
+    rol.description = rol_data.nombre
+    rol.estatus = rol_data.estado
+    db.commit()
+    db.refresh(rol)
+    return rol
+
+
+@app.delete("/roles/{id}", tags=["Roles"])
+def delete_rol(id: int,
+               db: Session = Depends(get_db),
+               current_user: User = Depends(get_current_user)):
+    rol = db.query(Rols).filter(Rols.id == id).first()
+    if not rol:
+        raise HTTPException(404, "Rol no encontrado")
+
+    db.delete(rol)
+    db.commit()
+    return {"mensaje": "Rol eliminado"}
+
+# ======================================================
+# USUARIOS CRUD
+# ======================================================
 
 @app.get("/usuarios/", response_model=List[UserRead], tags=["Usuarios"])
-def obtener_usuarios(db: Session = Depends(get_db)):
-    """Obtener todos los usuarios"""
-    usuarios = db.query(User).all()
-    return usuarios
+def get_users(db: Session = Depends(get_db),
+              current_user: User = Depends(get_current_user)):
+    return db.query(User).all()
+
+
+# =====================================================
+# 📌 OBTENER USUARIO POR ID
+# =====================================================
+
+@app.get("/usuarios/{id}", response_model=UserRead, tags=["Usuarios"])
+def get_user(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    user = db.query(User).filter(User.Id == id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado"
+        )
+
+    return user
+
+
+# =====================================================
+# 📌 CREAR USUARIO
+# =====================================================
 
 @app.post("/usuarios/", response_model=UserRead, tags=["Usuarios"])
-def crear_usuario(usuario: UserCreate, db: Session = Depends(get_db)):
-    """Crear un nuevo usuario"""
-    # Verificar que el rol existe
-    rol = db.query(Rols).filter(Rols.id == usuario.rol_Id).first()
-    if not rol:
-        raise HTTPException(status_code=400, detail="Rol no existe")
-    
-    # Verificar que el usuario no existe
-    if db.query(User).filter(User.usuario == usuario.usuario).first():
-        raise HTTPException(status_code=400, detail="Usuario ya existe")
-    
+def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+
+    # 🔍 Verificar si el usuario ya existe
+    existing_user = db.query(User).filter(User.usuario == user.usuario).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El nombre de usuario ya está registrado"
+        )
+
+    # 🔐 Hashear contraseña
+    hashed_password = hash_password(user.contrasena)
+
     nuevo_usuario = User(
-        rol_Id=usuario.rol_Id,
-        nombre=usuario.nombre,
-        papellido=usuario.papellido,
-        sapellido=usuario.sapellido,
-        usuario=usuario.usuario,
-        contrasena=usuario.contrasena,
-        telefono=usuario.telefono,
-        estatus=usuario.estatus,
-        fecha_registro=datetime.now(),
-        fecha_modificacion=datetime.now()
+        rol_Id=user.rol_Id,
+        nombre=user.nombre,
+        papellido=user.papellido,
+        sapellido=user.sapellido,
+        usuario=user.usuario,
+        telefono=user.telefono,
+        estatus=user.estatus,
+        contrasena=hashed_password
     )
-    db.add(nuevo_usuario)
-    db.commit()
-    db.refresh(nuevo_usuario)
+
+    try:
+        db.add(nuevo_usuario)
+        db.commit()
+        db.refresh(nuevo_usuario)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al crear el usuario: {str(e)}"
+        )
+
     return nuevo_usuario
 
-@app.get("/usuarios/{usuario_id}", response_model=UserRead, tags=["Usuarios"])
-def obtener_usuario(usuario_id: int, db: Session = Depends(get_db)):
-    """Obtener un usuario por ID"""
-    usuario = db.query(User).filter(User.Id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return usuario
+@app.put("/usuarios/{id}", response_model=UserRead, tags=["Usuarios"])
+def update_user(id: int, data: UserUpdate,
+                db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    user = db.query(User).filter(User.Id == id).first()
+    if not user:
+        raise HTTPException(404, "Usuario no encontrado")
 
-@app.put("/usuarios/{usuario_id}", response_model=UserRead, tags=["Usuarios"])
-def actualizar_usuario(usuario_id: int, usuario_update: UserUpdate, 
-                       db: Session = Depends(get_db)):
-    """Actualizar un usuario"""
-    usuario = db.query(User).filter(User.Id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    for key, value in usuario_update.dict(exclude_unset=True).items():
-        setattr(usuario, key, value)
-    
-    usuario.fecha_modificacion = datetime.now()
+    update_data = data.dict(exclude_unset=True)
+
+    if "contrasena" in update_data:
+        update_data["contrasena"] = hash_password(update_data["contrasena"])
+
+    for key, value in update_data.items():
+        setattr(user, key, value)
+
+    user.fecha_modificacion = datetime.utcnow()
     db.commit()
-    db.refresh(usuario)
-    return usuario
+    db.refresh(user)
+    return user
 
-@app.delete("/usuarios/{usuario_id}", tags=["Usuarios"])
-def eliminar_usuario(usuario_id: int, db: Session = Depends(get_db)):
-    """Eliminar un usuario"""
-    usuario = db.query(User).filter(User.Id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    db.delete(usuario)
+
+@app.delete("/usuarios/{id}", tags=["Usuarios"])
+def delete_user(id: int,
+                db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    user = db.query(User).filter(User.Id == id).first()
+    if not user:
+        raise HTTPException(404, "Usuario no encontrado")
+
+    db.delete(user)
     db.commit()
     return {"mensaje": "Usuario eliminado"}
 
-# ============================================================================
-# ENDPOINTS DE CLIENTES
-# ============================================================================
+# ======================================================
+# CLIENTES CRUD
+# ======================================================
 
 @app.get("/clientes/", response_model=List[ClienteRead], tags=["Clientes"])
-def obtener_clientes(db: Session = Depends(get_db)):
-    """Obtener todos los clientes"""
-    clientes = db.query(Cliente).all()
-    return clientes
+def get_clientes(db: Session = Depends(get_db),
+                 current_user: User = Depends(get_current_user)):
+    return db.query(Cliente).all()
+
+
+@app.get("/clientes/{id}", response_model=ClienteRead, tags=["Clientes"])
+def get_cliente(id: int, db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    cliente = db.query(Cliente).filter(Cliente.Id == id).first()
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+    return cliente
+
 
 @app.post("/clientes/", response_model=ClienteRead, tags=["Clientes"])
-def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
-    """Crear un nuevo cliente"""
-    nuevo_cliente = Cliente(
+def create_cliente(cliente: ClienteCreate,
+                   db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    nuevo = Cliente(
         nombre=cliente.nombre,
         papellido=cliente.papellido,
         sapellido=cliente.sapellido,
         direccion=cliente.direccion,
         telefono=cliente.telefono,
         estatus=cliente.estatus,
-        fecha_registro=datetime.now(),
-        fecha_modificacion=datetime.now()
+        fecha_registro=datetime.utcnow(),
+        fecha_modificacion=datetime.utcnow()
     )
-    db.add(nuevo_cliente)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_cliente)
-    return nuevo_cliente
+    db.refresh(nuevo)
+    return nuevo
 
-# ============================================================================
-# ENDPOINTS DE SERVICIOS
-# ============================================================================
+
+@app.put("/clientes/{id}", response_model=ClienteRead, tags=["Clientes"])
+def update_cliente(id: int, data: ClienteUpdate,
+                   db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    cliente = db.query(Cliente).filter(Cliente.Id == id).first()
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(cliente, key, value)
+
+    cliente.fecha_modificacion = datetime.utcnow()
+    db.commit()
+    db.refresh(cliente)
+    return cliente
+
+
+@app.delete("/clientes/{id}", tags=["Clientes"])
+def delete_cliente(id: int,
+                   db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    cliente = db.query(Cliente).filter(Cliente.Id == id).first()
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+
+    db.delete(cliente)
+    db.commit()
+    return {"mensaje": "Cliente eliminado"}
+
+# ======================================================
+# SERVICIOS CRUD
+# ======================================================
 
 @app.get("/servicios/", response_model=List[ServicioRead], tags=["Servicios"])
-def obtener_servicios(db: Session = Depends(get_db)):
-    """Obtener todos los servicios"""
-    servicios = db.query(Servicio).all()
-    return servicios
+def get_servicios(db: Session = Depends(get_db),
+                  current_user: User = Depends(get_current_user)):
+    return db.query(Servicio).all()
+
+
+@app.get("/servicios/{id}", response_model=ServicioRead, tags=["Servicios"])
+def get_servicio(id: int, db: Session = Depends(get_db),
+                 current_user: User = Depends(get_current_user)):
+    servicio = db.query(Servicio).filter(Servicio.Id == id).first()
+    if not servicio:
+        raise HTTPException(404, "Servicio no encontrado")
+    return servicio
+
 
 @app.post("/servicios/", response_model=ServicioRead, tags=["Servicios"])
-def crear_servicio(servicio: ServicioCreate, db: Session = Depends(get_db)):
-    """Crear un nuevo servicio"""
-    nuevo_servicio = Servicio(
+def create_servicio(servicio: ServicioCreate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    nuevo = Servicio(
         nombre=servicio.nombre,
         descripcion=servicio.descripcion,
         costo=servicio.costo,
         estatus=servicio.estatus,
-        fecha_registro=datetime.now(),
-        fecha_modificacion=datetime.now()
+        fecha_registro=datetime.utcnow(),
+        fecha_modificacion=datetime.utcnow()
     )
-    db.add(nuevo_servicio)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_servicio)
-    return nuevo_servicio
+    db.refresh(nuevo)
+    return nuevo
 
-# ============================================================================
-# ENDPOINTS DE VEHÍCULOS
-# ============================================================================
+
+@app.put("/servicios/{id}", response_model=ServicioRead, tags=["Servicios"])
+def update_servicio(id: int, data: ServicioUpdate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    servicio = db.query(Servicio).filter(Servicio.Id == id).first()
+    if not servicio:
+        raise HTTPException(404, "Servicio no encontrado")
+
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(servicio, key, value)
+
+    servicio.fecha_modificacion = datetime.utcnow()
+    db.commit()
+    db.refresh(servicio)
+    return servicio
+
+
+@app.delete("/servicios/{id}", tags=["Servicios"])
+def delete_servicio(id: int,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    servicio = db.query(Servicio).filter(Servicio.Id == id).first()
+    if not servicio:
+        raise HTTPException(404, "Servicio no encontrado")
+
+    db.delete(servicio)
+    db.commit()
+    return {"mensaje": "Servicio eliminado"}
+
+# ======================================================
+# VEHICULOS CRUD
+# ======================================================
 
 @app.get("/vehiculos/", response_model=List[VehiculoRead], tags=["Vehículos"])
-def obtener_vehiculos(db: Session = Depends(get_db)):
-    """Obtener todos los vehículos"""
-    vehiculos = db.query(Vehiculo).all()
-    return vehiculos
+def get_vehiculos(db: Session = Depends(get_db),
+                  current_user: User = Depends(get_current_user)):
+    return db.query(Vehiculo).all()
+
+
+@app.get("/vehiculos/{id}", response_model=VehiculoRead, tags=["Vehículos"])
+def get_vehiculo(id: int, db: Session = Depends(get_db),
+                 current_user: User = Depends(get_current_user)):
+    vehiculo = db.query(Vehiculo).filter(Vehiculo.Id == id).first()
+    if not vehiculo:
+        raise HTTPException(404, "Vehículo no encontrado")
+    return vehiculo
+
 
 @app.post("/vehiculos/", response_model=VehiculoRead, tags=["Vehículos"])
-def crear_vehiculo(vehiculo: VehiculoCreate, db: Session = Depends(get_db)):
-    """Crear un nuevo vehículo"""
-    # Verificar que el cliente existe
-    cliente = db.query(Cliente).filter(Cliente.Id == vehiculo.cliente_Id).first()
-    if not cliente:
-        raise HTTPException(status_code=400, detail="Cliente no existe")
-    
-    # Verificar que la matrícula no existe
-    if db.query(Vehiculo).filter(Vehiculo.matricula == vehiculo.matricula).first():
-        raise HTTPException(status_code=400, detail="Matrícula ya existe")
-    
-    nuevo_vehiculo = Vehiculo(
+def create_vehiculo(vehiculo: VehiculoCreate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    nuevo = Vehiculo(
         cliente_Id=vehiculo.cliente_Id,
         matricula=vehiculo.matricula,
         modelo=vehiculo.modelo,
         color=vehiculo.color,
         numero_del_dueno=vehiculo.numero_del_dueno,
         estatus=vehiculo.estatus,
-        fecha_registro=datetime.now(),
-        fecha_modificacion=datetime.now()
+        fecha_registro=datetime.utcnow(),
+        fecha_modificacion=datetime.utcnow()
     )
-    db.add(nuevo_vehiculo)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_vehiculo)
-    return nuevo_vehiculo
+    db.refresh(nuevo)
+    return nuevo
 
-# ============================================================================
-# RUN
-# ============================================================================
 
-if __name__ == "__main__":
-    import uvicorn
-    
-    print("""
-    ╔════════════════════════════════════════════════════════════╗
-    ║            API Autolavado - Iniciando...                   ║
-    ║                                                            ║
-    ║  📚 Documentación: http://localhost:8000/docs              ║
-    ║  🔍 ReDoc: http://localhost:8000/redoc                     ║
-    ║                                                            ║
-    ║  Presiona Ctrl+C para detener                              ║
-    ╚════════════════════════════════════════════════════════════╝
-    """)
-    
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+@app.put("/vehiculos/{id}", response_model=VehiculoRead, tags=["Vehículos"])
+def update_vehiculo(id: int, data: VehiculoUpdate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    vehiculo = db.query(Vehiculo).filter(Vehiculo.Id == id).first()
+    if not vehiculo:
+        raise HTTPException(404, "Vehículo no encontrado")
+
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(vehiculo, key, value)
+
+    vehiculo.fecha_modificacion = datetime.utcnow()
+    db.commit()
+    db.refresh(vehiculo)
+    return vehiculo
+
+
+@app.delete("/vehiculos/{id}", tags=["Vehículos"])
+def delete_vehiculo(id: int,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    vehiculo = db.query(Vehiculo).filter(Vehiculo.Id == id).first()
+    if not vehiculo:
+        raise HTTPException(404, "Vehículo no encontrado")
+
+    db.delete(vehiculo)
+    db.commit()
+    return {"mensaje": "Vehículo eliminado"}
