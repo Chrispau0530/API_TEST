@@ -6,7 +6,6 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 from models.model_user import User
-import hashlib
 import os
 
 # =====================================================
@@ -17,33 +16,35 @@ SECRET_KEY = os.getenv("SECRET_KEY", "CAMBIAR_ESTA_CLAVE_EN_PRODUCCION")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# bcrypt como algoritmo principal
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Usar pbkdf2_sha256 en lugar de bcrypt para evitar problemas de versión
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # =====================================================
-# 🔒 NORMALIZAR CONTRASEÑA (SOLUCIÓN ERROR 72 BYTES)
-# =====================================================
-
-def normalize_password(password: str) -> str:
-    """
-    Convierte cualquier contraseña a SHA256 fijo
-    evitando el límite de 72 bytes de bcrypt
-    """
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-# =====================================================
-# 🔐 HASH DE CONTRASEÑA
+# 🔒 HASH DE CONTRASEÑA (PBKDF2-SHA256)
 # =====================================================
 
 def hash_password(password: str) -> str:
-    normalized = normalize_password(password)
-    return pwd_context.hash(normalized)
+    """
+    Hashea una contraseña usando PBKDF2-SHA256.
+    
+    PBKDF2 es más flexible que bcrypt y no tiene límite de 72 bytes.
+    Passlib maneja automáticamente el salt y las iteraciones.
+    """
+    if not isinstance(password, str):
+        raise ValueError("Password must be a string, not " + type(password).__name__)
+    
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    normalized = normalize_password(plain_password)
-    return pwd_context.verify(normalized, hashed_password)
+    """
+    Verifica una contraseña contra su hash.
+    """
+    if not isinstance(plain_password, str):
+        return False
+    
+    return pwd_context.verify(plain_password, hashed_password)
 
 # =====================================================
 # 🎟 CREAR TOKEN JWT

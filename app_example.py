@@ -2,7 +2,7 @@
 API Autolavado - CRUD COMPLETO + Seguridad JWT
 """
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -29,7 +29,7 @@ from security import (
 )
 
 # Schemas
-from schemas.schemarol import SchemaRol
+from schemas.schemarol import SchemaRol, Rol
 from schemas.schemauser import UserCreate, UserUpdate, UserRead
 from schemas.schemacliente import ClienteCreate, ClienteUpdate, ClienteRead
 from schemas.schemaservicio import ServicioCreate, ServicioUpdate, ServicioRead
@@ -79,13 +79,13 @@ def login(
 # ROLES CRUD
 # ======================================================
 
-@app.get("/roles/", response_model=List[SchemaRol], tags=["Roles"])
+@app.get("/roles/", response_model=List[Rol], tags=["Roles"])
 def get_roles(db: Session = Depends(get_db),
               current_user: User = Depends(get_current_user)):
     return db.query(Rols).all()
 
 
-@app.get("/roles/{id}", response_model=SchemaRol, tags=["Roles"])
+@app.get("/roles/{id}", response_model=Rol, tags=["Roles"])
 def get_rol(id: int, db: Session = Depends(get_db),
             current_user: User = Depends(get_current_user)):
     rol = db.query(Rols).filter(Rols.id == id).first()
@@ -94,17 +94,17 @@ def get_rol(id: int, db: Session = Depends(get_db),
     return rol
 
 
-@app.post("/roles/", response_model=SchemaRol, tags=["Roles"])
+@app.post("/roles/", response_model=Rol, tags=["Roles"])
 def create_rol(rol: SchemaRol, db: Session = Depends(get_db),
                current_user: User = Depends(get_current_user)):
-    nuevo = Rols(description=rol.nombre, estatus=rol.estado)
+    nuevo = Rols(nombre=rol.nombre, descripcion=rol.descripcion, estado=rol.estado)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
     return nuevo
 
 
-@app.put("/roles/{id}", response_model=SchemaRol, tags=["Roles"])
+@app.put("/roles/{id}", response_model=Rol, tags=["Roles"])
 def update_rol(id: int, rol_data: SchemaRol,
                db: Session = Depends(get_db),
                current_user: User = Depends(get_current_user)):
@@ -112,8 +112,9 @@ def update_rol(id: int, rol_data: SchemaRol,
     if not rol:
         raise HTTPException(404, "Rol no encontrado")
 
-    rol.description = rol_data.nombre
-    rol.estatus = rol_data.estado
+    rol.nombre = rol_data.nombre
+    rol.descripcion = rol_data.descripcion
+    rol.estado = rol_data.estado
     db.commit()
     db.refresh(rol)
     return rol
@@ -180,8 +181,21 @@ def create_user(
             detail="El nombre de usuario ya está registrado"
         )
 
+    # 🔐 Validar que la contraseña es un string válido
+    if not isinstance(user.contrasena, str) or len(user.contrasena) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contraseña debe ser un string no vacío"
+        )
+
     # 🔐 Hashear contraseña
-    hashed_password = hash_password(user.contrasena)
+    try:
+        hashed_password = hash_password(user.contrasena)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al procesar la contraseña: {str(e)}"
+        )
 
     nuevo_usuario = User(
         rol_Id=user.rol_Id,

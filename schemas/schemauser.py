@@ -20,7 +20,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
 	"""Schema used when creating a new User."""
 
-	contrasena: constr(min_length=6, max_length=128)
+	contrasena: constr(min_length=6, max_length=60)
 
 
 class UserUpdate(BaseModel):
@@ -31,7 +31,7 @@ class UserUpdate(BaseModel):
 	papellido: Optional[constr(max_length=60)] = None
 	sapellido: Optional[constr(max_length=60)] = None
 	usuario: Optional[constr(max_length=60)] = None
-	contrasena: Optional[constr(min_length=6, max_length=128)] = None
+	contrasena: Optional[constr(min_length=6, max_length=60)] = None
 	telefono: Optional[constr(max_length=10)] = None
 	estatus: Optional[bool] = None
 
@@ -44,5 +44,5 @@ class UserRead(UserBase):
 	fecha_modificacion: Optional[datetime] = None
 
 	class Config:
-		orm_mode = True
+		from_attributes = True
 

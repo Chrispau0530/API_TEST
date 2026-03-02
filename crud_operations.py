@@ -67,6 +67,8 @@ class RolOperations:
 
 
 # ==================== OPERACIONES CON USUARIOS ====================
+from security import hash_password
+from sqlalchemy.exc import IntegrityError
 
 class UsuarioOperations:
     """Operaciones CRUD para Usuarios"""
@@ -74,60 +76,86 @@ class UsuarioOperations:
     @staticmethod
     def crear_usuario(db: Session, rol_id: int, nombre: str, papellido: str,
                      usuario: str, contrasena: str, **kwargs) -> User:
-        """Crear un nuevo usuario"""
+        """Crear un nuevo usuario con contraseña hasheada"""
+
+        # Verificar si ya existe
+        existing = db.query(User).filter(User.usuario == usuario).first()
+        if existing:
+            raise ValueError("El usuario ya existe")
+
+        # 🔐 Hashear contraseña (máx 72 bytes)
+        hashed_password = hash_password(contrasena)
+
         nuevo_usuario = User(
             rol_Id=rol_id,
             nombre=nombre,
             papellido=papellido,
             usuario=usuario,
-            contrasena=contrasena,
+            contrasena=hashed_password,
             fecha_registro=datetime.now(),
             fecha_modificacion=datetime.now(),
             **kwargs
         )
-        db.add(nuevo_usuario)
-        db.commit()
-        db.refresh(nuevo_usuario)
+
+        try:
+            db.add(nuevo_usuario)
+            db.commit()
+            db.refresh(nuevo_usuario)
+        except IntegrityError:
+            db.rollback()
+            raise ValueError("Error de integridad en base de datos")
+
         return nuevo_usuario
     
+
     @staticmethod
     def obtener_usuario(db: Session, usuario_id: int) -> User:
-        """Obtener un usuario por ID"""
         return db.query(User).filter(User.Id == usuario_id).first()
     
+
     @staticmethod
     def obtener_usuario_por_nombre(db: Session, usuario: str) -> User:
-        """Obtener un usuario por nombre de usuario"""
         return db.query(User).filter(User.usuario == usuario).first()
     
+
     @staticmethod
     def obtener_todos_usuarios(db: Session):
-        """Obtener todos los usuarios"""
         return db.query(User).all()
     
+
     @staticmethod
     def actualizar_usuario(db: Session, usuario_id: int, **kwargs) -> User:
-        """Actualizar un usuario"""
+        """Actualizar usuario (si cambia contraseña, la hashea)"""
+
         usuario = db.query(User).filter(User.Id == usuario_id).first()
-        if usuario:
-            for key, value in kwargs.items():
-                if hasattr(usuario, key) and key != 'fecha_registro':
-                    setattr(usuario, key, value)
-            usuario.fecha_modificacion = datetime.now()
-            db.commit()
-            db.refresh(usuario)
+        if not usuario:
+            return None
+
+        for key, value in kwargs.items():
+
+            if key == "contrasena":
+                # 🔐 Hashear solo si no está hasheada
+                if not value.startswith("$2b$"):
+                    value = hash_password(value)
+
+            if hasattr(usuario, key) and key != 'fecha_registro':
+                setattr(usuario, key, value)
+
+        usuario.fecha_modificacion = datetime.now()
+        db.commit()
+        db.refresh(usuario)
+
         return usuario
     
+
     @staticmethod
     def eliminar_usuario(db: Session, usuario_id: int) -> bool:
-        """Eliminar un usuario"""
         usuario = db.query(User).filter(User.Id == usuario_id).first()
         if usuario:
             db.delete(usuario)
             db.commit()
             return True
         return False
-
 
 # ==================== OPERACIONES CON CLIENTES ====================
 

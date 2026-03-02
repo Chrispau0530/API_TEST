@@ -13,7 +13,7 @@ class User(Base):
     papellido = Column(String(60))
     sapellido = Column(String(60))
     usuario = Column(String(60))
-    contrasena = Column(String(60))
+    contrasena = Column(String(255))
     telefono = Column(String(10))
     estatus = Column(Boolean)
     fecha_registro = Column(DateTime)

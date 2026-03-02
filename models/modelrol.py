@@ -5,8 +5,10 @@ class Rols(Base):
     '''En este apartado se define la clase con sus atributos'''
     __tablename__ = "tbc_roles"
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String(60))
-    estatus = Column(Boolean)
+    # Use names aligned with schemas: 'nombre' and 'estado'
+    nombre = Column(String(60))
+    descripcion = Column(String(120))
+    estado = Column(Boolean)
 
 
     
