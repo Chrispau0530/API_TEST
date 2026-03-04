@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS tbc_roles (
     INDEX idx_estatus (estatus)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS tb_productos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Descuento INT,
+    Costo_Total INT,
+    estatus BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tabla de Usuarios
 CREATE TABLE IF NOT EXISTS tbb_users (
     Id INT PRIMARY KEY AUTO_INCREMENT,

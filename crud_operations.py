@@ -14,6 +14,8 @@ from models.modelrol import Rols
 from models.modelservicio import Servicio
 from models.vehiculos import Vehiculo
 from models.serviciovehiculo import ServicioVehiculo
+from models.modelproducto import Producto
+
 
 # Importar base de datos
 from database import SessionLocal
@@ -64,6 +66,11 @@ class RolOperations:
             db.commit()
             return True
         return False
+
+
+
+
+
 
 
 # ==================== OPERACIONES CON USUARIOS ====================
@@ -390,7 +397,63 @@ class ServicioVehiculoOperations:
             return True
         return False
 
+ #==================Operaciones con Producto 
+ class ProductoOperations:
+    """Operaciones CRUD para Productos"""
+    
+    @staticmethod
+    def crear_producto(db: Session, Descuento: int, Costo_Total: int, estatus: bool = True) -> Producto:
+        """Crear un nuevo producto"""
+        nuevo_producto = Producto(
+            Descuento=Descuento,
+            Costo_Total=Costo_Total,
+            estatus=estatus
+        )
+        db.add(nuevo_producto)
+        db.commit()
+        db.refresh(nuevo_producto)
+        return nuevo_producto
+    
 
+    @staticmethod
+    def obtener_producto(db: Session, producto_id: int) -> Producto:
+        """Obtener un producto por ID"""
+        return db.query(Producto).filter(Producto.id == producto_id).first()
+    
+
+    @staticmethod
+    def obtener_todos_productos(db: Session):
+        """Obtener todos los productos"""
+        return db.query(Producto).all()
+    
+
+    @staticmethod
+    def actualizar_producto(db: Session, producto_id: int, **kwargs) -> Producto:
+        """Actualizar un producto"""
+        producto = db.query(Producto).filter(Producto.id == producto_id).first()
+        
+        if producto:
+            for key, value in kwargs.items():
+                if hasattr(producto, key) and key != 'fecha_registro':
+                    setattr(producto, key, value)
+            
+            db.commit()
+            db.refresh(producto)
+        
+        return producto
+    
+
+    @staticmethod
+    def eliminar_producto(db: Session, producto_id: int) -> bool:
+        """Eliminar un producto"""
+        producto = db.query(Producto).filter(Producto.id == producto_id).first()
+        
+        if producto:
+            db.delete(producto)
+            db.commit()
+            return True
+        
+        return False
 # ==================== EJEMPLO DE USO ====================
 
 if __name__ == "__main__":

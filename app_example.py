@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, date
 
 # DB
 from database import get_db
@@ -19,6 +19,7 @@ from models.model_user import User
 from models.modelcliente import Cliente
 from models.modelservicio import Servicio
 from models.vehiculos import Vehiculo
+from models.modelproducto import Producto
 
 # Seguridad
 from security import (
@@ -34,6 +35,7 @@ from schemas.schemauser import UserCreate, UserUpdate, UserRead
 from schemas.schemacliente import ClienteCreate, ClienteUpdate, ClienteRead
 from schemas.schemaservicio import ServicioCreate, ServicioUpdate, ServicioRead
 from schemas.schemavehiculo import VehiculoCreate, VehiculoUpdate, VehiculoRead
+from schemas.schemaproductos import ProductoCreate, ProductoUpdate, ProductoRead
 
 # ======================================================
 # APP CONFIG
@@ -456,3 +458,161 @@ def delete_vehiculo(id: int,
     db.delete(vehiculo)
     db.commit()
     return {"mensaje": "Vehículo eliminado"}
+
+# ======================================================
+# PRODUCTOS CRUD
+# ======================================================
+
+@app.get("/productos/", response_model=List[ProductoRead], tags=["Productos"])
+def get_productos(db: Session = Depends(get_db),
+                  current_user: User = Depends(get_current_user)):
+    return db.query(Producto).all()
+
+
+@app.get("/productos/{id}", response_model=ProductoRead, tags=["Productos"])
+def get_producto(id: int, db: Session = Depends(get_db),
+                 current_user: User = Depends(get_current_user)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+    if not producto:
+        raise HTTPException(404, "Producto no encontrado")
+    return producto
+
+
+@app.post("/productos/", response_model=ProductoRead, tags=["Productos"])
+def create_producto(producto: ProductoCreate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    nuevo = Producto(
+        Descuento=producto.Descuento,
+        Costo_Total=producto.Costo_Total,
+        estatus=producto.estatus
+    )
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+
+@app.put("/productos/{id}", response_model=ProductoRead, tags=["Productos"])
+def update_producto(id: int, data: ProductoUpdate,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+    if not producto:
+        raise HTTPException(404, "Producto no encontrado")
+
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(producto, key, value)
+
+    db.commit()
+    db.refresh(producto)
+    return producto
+
+
+@app.delete("/productos/{id}", tags=["Productos"])
+def delete_producto(id: int,
+                    db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+    if not producto:
+        raise HTTPException(404, "Producto no encontrado")
+
+    db.delete(producto)
+    db.commit()
+    return {"mensaje": "Producto eliminado"}
+
+# ======================================================
+# SERVICIOS DETALLADOS - ENDPOINT ESPECIAL
+# ======================================================
+
+# Schema para respuesta detallada del servicio
+from pydantic import BaseModel
+
+class ServicioDetalleResponse(BaseModel):
+    """Schema para retornar detalles completos del servicio"""
+    servicio_id: int
+    nombre_cajero: str
+    nombre_operativo: str  # Nombre del lavador
+    costo_servicio: int
+    modelo_vehiculo: str
+    placas_vehiculo: str
+    color_vehiculo: str
+    costo_total: int
+    fecha_servicio: datetime
+
+
+@app.get("/servicios-detalle/", response_model=List[ServicioDetalleResponse], tags=["Servicios"])
+def get_servicios_detalle(
+    fecha: date = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Obtiene los servicios con detalles completos filtrados por fecha.
+    Si no se especifica fecha, retorna los servicios de hoy.
+    
+    Parámetros:
+    - fecha: Fecha en formato YYYY-MM-DD (opcional, por defecto hoy)
+    
+    Retorna:
+    - nombre_cajero: Nombre del usuario que actúa como cajero
+    - nombre_operativo: Nombre del usuario que actúa como lavador
+    - costo_servicio: Costo del servicio realizado
+    - modelo_vehiculo: Modelo del vehículo
+    - placas_vehiculo: Matrícula/placas del vehículo
+    - color_vehiculo: Color del vehículo
+    - costo_total: Costo total del producto/servicio
+    """
+    
+    # Si no se especifica fecha, usar la fecha de hoy
+    if fecha is None:
+        fecha = date.today()
+    
+    # Convertir date a datetime para comparación
+    from datetime import timedelta
+    fecha_inicio = datetime.combine(fecha, datetime.min.time())
+    fecha_fin = datetime.combine(fecha, datetime.max.time())
+    
+    # Usaremos una consulta directa sobre `ServicioVehiculo` para obtener los registros
+    # Una consulta más simple y efectiva
+    from sqlalchemy import func, and_
+
+    servicios_list = []
+
+    # Mejor: hacer query directa en ServicioVehiculo
+    from models.serviciovehiculo import ServicioVehiculo
+    from sqlalchemy import cast, String, Date
+    
+    servicios_detalle = db.query(ServicioVehiculo).filter(
+        cast(ServicioVehiculo.fecha, Date) == fecha
+    ).all()
+    
+    resultado = []
+    
+    for sv in servicios_detalle:
+        # Obtener datos relacionados
+        usuario_cajero = db.query(User).filter(User.Id == sv.cajero_Id).first()
+        usuario_operativo = db.query(User).filter(User.Id == sv.lavador_Id).first()
+        servicio = db.query(Servicio).filter(Servicio.Id == sv.servicio_Id).first()
+        vehiculo = db.query(Vehiculo).filter(Vehiculo.Id == sv.vehiculo_Id).first()
+        
+        # Obtener costo total del producto (si existe relación)
+        # Usaremos el costo del servicio como costo_total
+        costo_total = servicio.costo if servicio else 0
+        
+        if usuario_cajero and usuario_operativo and servicio and vehiculo:
+            resultado.append(
+                ServicioDetalleResponse(
+                    servicio_id=sv.Id,
+                    nombre_cajero=usuario_cajero.nombre,
+                    nombre_operativo=usuario_operativo.nombre,
+                    costo_servicio=servicio.costo,
+                    modelo_vehiculo=vehiculo.modelo,
+                    placas_vehiculo=vehiculo.matricula,
+                    color_vehiculo=vehiculo.color,
+                    costo_total=costo_total,
+                    fecha_servicio=sv.fecha
+                )
+            )
+    
+    return resultado
