@@ -31,10 +31,43 @@ def initialize_database():
     try:
         create_tables()
         print("✓ Tablas creadas exitosamente")
+        # Ejecutar migraciones ligeras para columnas añadidas por actualizaciones
+        try:
+            migrate_product_columns()
+            print("✓ Migraciones aplicadas")
+        except Exception as me:
+            print(f"⚠️ Error en migraciones: {me}")
         return True
     except Exception as e:
         print(f"✗ Error al crear tablas: {e}")
         return False
+
+
+def column_exists(schema: str, table: str, column: str) -> bool:
+    q = """
+    SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table AND COLUMN_NAME = :column
+    """
+    res = execute_raw_query(q, {'schema': schema, 'table': table, 'column': column})
+    try:
+        return int(res[0][0]) > 0
+    except Exception:
+        return False
+
+
+def migrate_product_columns():
+    """Agregar columnas `stock` y `Descripcion` a `tb_productos` si no existen."""
+    # Nombre de la base de datos (según config/db.py)
+    DB_NAME = 'autolavadoDB'
+    tbl = 'tb_productos'
+
+    if not column_exists(DB_NAME, tbl, 'stock'):
+        print('Agregando columna `stock` a', tbl)
+        execute_raw_query(f"ALTER TABLE {tbl} ADD COLUMN stock INT DEFAULT 0")
+
+    if not column_exists(DB_NAME, tbl, 'Descripcion'):
+        print('Agregando columna `Descripcion` a', tbl)
+        execute_raw_query(f"ALTER TABLE {tbl} ADD COLUMN Descripcion VARCHAR(120) NULL")
 
 
 def check_database_status():

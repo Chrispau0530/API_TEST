@@ -15,6 +15,8 @@ import Clientes        from './pages/Clientes'
 import Vehiculos       from './pages/Vehiculos'
 import Servicios       from './pages/Servicios'
 import ServiciosDetalle from './pages/Serviciosdetalle'
+import Stock from './pages/Stock'
+import Productos from './pages/Productos'
 
 // CSS global del dashboard
 import './dashboard.css'
@@ -46,6 +48,8 @@ export default function App() {
           <Route index      element={<Dashboard />} />
           <Route path="usuarios"  element={<Usuarios />} />
           <Route path="clientes"  element={<Clientes />} />
+          <Route path="productos" element={<Productos />} />
+          <Route path="stock"     element={<Stock />} />
           <Route path="vehiculos" element={<Vehiculos />} />
           <Route path="servicios" element={<Servicios />} />
           <Route path="detalle"   element={<ServiciosDetalle />} />

@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, DateTime, Boolean
+from sqlalchemy import Column, Integer, DateTime, Boolean, String
 from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declarative_base
+from config.db import Base
 
-Base = declarative_base()
 
 class Producto(Base):
     __tablename__ = "tb_productos"
@@ -12,3 +11,5 @@ class Producto(Base):
     Descuento = Column(Integer)
     Costo_Total = Column(Integer)
     estatus = Column(Boolean, default=True)
+    stock = Column(Integer, default=0)
+    Descripcion = Column(String(120), nullable=True)

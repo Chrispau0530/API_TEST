@@ -14,7 +14,9 @@ const NAV = [
     items: [
       { to: '/dashboard/usuarios',  label: 'Usuarios',  icon: <IconUsers /> },
       { to: '/dashboard/clientes',  label: 'Clientes',  icon: <IconClients /> },
-      { to: '/dashboard/vehiculos', label: 'Vehículos', icon: <IconCar /> },
+          { to: '/dashboard/productos', label: 'Productos', icon: <IconBox /> },
+          { to: '/dashboard/vehiculos', label: 'Vehículos', icon: <IconCar /> },
+          { to: '/dashboard/stock',     label: 'Stock',     icon: <IconBox /> },
       { to: '/dashboard/servicios', label: 'Servicios', icon: <IconService /> },
     ]
   },
@@ -160,4 +162,7 @@ function IconService() {
 }
 function IconReport() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+}
+function IconBox() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73L12 2 4 6.27A2 2 0 003 8v8a2 2 0 001 1.73L12 22l8-4.27A2 2 0 0021 16z"/><path d="M12 7v7"/></svg>
 }

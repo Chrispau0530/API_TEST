@@ -10,7 +10,9 @@ class ProductoBase(BaseModel):
 
     Descuento: Optional[int] = None
     Costo_Total: int
+    Descripcion: Optional[str] = None
     estatus: Optional[bool] = True
+    stock: Optional[int] = 0
 
 
 class ProductoCreate(ProductoBase):
@@ -21,10 +23,11 @@ class ProductoCreate(ProductoBase):
 
 class ProductoUpdate(BaseModel):
     """Schema used when updating an existing Producto."""
-
+    Descripcion: Optional[str] = None
     Descuento: Optional[int] = None
     Costo_Total: Optional[int] = None
     estatus: Optional[bool] = None
+    stock: Optional[int] = None
 
 
 class ProductoRead(ProductoBase):
@@ -32,6 +35,6 @@ class ProductoRead(ProductoBase):
 
     id: int
     fecha_registro: Optional[datetime] = None
-
+    
     class Config:
         from_attributes = True

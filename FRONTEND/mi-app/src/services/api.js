@@ -96,4 +96,10 @@ export const productosAPI = {
   delete: (id) => api.delete(`/productos/${id}`)
 }
 
+// Stock / movimientos
+export const stockAPI = {
+  getMovements: (productoId) => api.get(`/productos/${productoId}/movimientos`),
+  createMovement: (productoId, data) => api.post(`/productos/${productoId}/movimientos`, data),
+}
+
 export default api

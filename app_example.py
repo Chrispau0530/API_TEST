@@ -37,6 +37,8 @@ from schemas.schemacliente import ClienteCreate, ClienteUpdate, ClienteRead
 from schemas.schemaservicio import ServicioCreate, ServicioUpdate, ServicioRead
 from schemas.schemavehiculo import VehiculoCreate, VehiculoUpdate, VehiculoRead
 from schemas.schemaproductos import ProductoCreate, ProductoUpdate, ProductoRead
+from schemas.schemastock import StockMovementCreate, StockMovementRead
+from models.stock_movement import StockMovement
 
 # ======================================================
 # APP CONFIG
@@ -489,14 +491,63 @@ def create_producto(producto: ProductoCreate,
                     db: Session = Depends(get_db),
                     current_user: User = Depends(get_current_user)):
     nuevo = Producto(
+        Descripcion=getattr(producto, 'Descripcion', None),
         Descuento=producto.Descuento,
         Costo_Total=producto.Costo_Total,
-        estatus=producto.estatus
+        estatus=producto.estatus,
+        stock=getattr(producto, 'stock', 0)
     )
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
     return nuevo
+
+
+@app.get("/productos/{id}/movimientos", response_model=List[StockMovementRead], tags=["Stock"])
+def get_producto_movimientos(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    movimientos = db.query(StockMovement).filter(StockMovement.producto_Id == id).order_by(StockMovement.fecha.desc()).all()
+    return movimientos
+
+
+@app.post("/productos/{id}/movimientos", response_model=StockMovementRead, tags=["Stock"])
+def create_producto_movimiento(id: int, movimiento: StockMovementCreate,
+                                db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    tipo = (movimiento.tipo or '').strip().upper()
+    if tipo not in ('IN', 'OUT'):
+        raise HTTPException(status_code=400, detail="Tipo debe ser 'IN' o 'OUT'")
+
+    cantidad = int(movimiento.cantidad)
+    if cantidad <= 0:
+        raise HTTPException(status_code=400, detail="La cantidad debe ser mayor a 0")
+
+    # Ajustar stock
+    new_stock = producto.stock + cantidad if tipo == 'IN' else producto.stock - cantidad
+    if new_stock < 0:
+        raise HTTPException(status_code=400, detail="Stock insuficiente")
+
+    producto.stock = new_stock
+
+    mv = StockMovement(
+        producto_Id=id,
+        cantidad=cantidad,
+        tipo=tipo,
+        descripcion=movimiento.descripcion,
+        usuario_Id=getattr(current_user, 'Id', None)
+    )
+    try:
+        db.add(mv)
+        db.commit()
+        db.refresh(mv)
+        db.refresh(producto)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return mv
 
 
 @app.put("/productos/{id}", response_model=ProductoRead, tags=["Productos"])
@@ -507,7 +558,8 @@ def update_producto(id: int, data: ProductoUpdate,
     if not producto:
         raise HTTPException(404, "Producto no encontrado")
 
-    for key, value in data.dict(exclude_unset=True).items():
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
         setattr(producto, key, value)
 
     db.commit()
