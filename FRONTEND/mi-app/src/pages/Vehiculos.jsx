@@ -125,14 +125,14 @@ export default function Vehiculos() {
               <tbody>
                 {filtered.map(row => (
                   <tr key={row.Id}>
-                    <td className="td-mono">#{row.Id}</td>
-                    <td>
+                    <td className="td-mono" data-label="ID">#{row.Id}</td>
+                    <td data-label="Placas">
                       <span className="badge badge-blue" style={{ letterSpacing: '0.05em' }}>
                         {row.matricula}
                       </span>
                     </td>
-                    <td className="td-primary">{row.modelo}</td>
-                    <td>
+                    <td className="td-primary" data-label="Modelo">{row.modelo}</td>
+                    <td data-label="Color">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{
                           width: 12, height: 12, borderRadius: '50%',
@@ -142,14 +142,14 @@ export default function Vehiculos() {
                         {row.color || '—'}
                       </div>
                     </td>
-                    <td className="td-mono">{row.numero_del_dueno || '—'}</td>
-                    <td>{clienteNombre(row.cliente_Id)}</td>
-                    <td>
+                    <td className="td-mono" data-label="Propietario">{row.numero_del_dueno || '—'}</td>
+                    <td data-label="Cliente">{clienteNombre(row.cliente_Id)}</td>
+                    <td data-label="Estatus">
                       <span className={`badge ${row.estatus ? 'badge-active' : 'badge-inactive'}`}>
                         {row.estatus ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="td-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => openEdit(row)}>Editar</button>
                         <button className="btn btn-danger btn-sm" onClick={() => openDelete(row)}>Eliminar</button>

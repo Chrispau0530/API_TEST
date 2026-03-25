@@ -59,10 +59,10 @@ export default function Stock() {
             <tbody>
               {productos.map(p => (
                 <tr key={p.id}>
-                  <td className="td-mono">#{p.id}</td>
-                  <td>{p.Descripcion || p.nombre || `Prod ${p.id}`}</td>
-                  <td className="td-mono">{p.stock ?? 0}</td>
-                  <td>
+                  <td className="td-mono" data-label="ID">#{p.id}</td>
+                  <td data-label="Producto">{p.Descripcion || p.nombre || `Prod ${p.id}`}</td>
+                  <td className="td-mono" data-label="Stock">{p.stock ?? 0}</td>
+                  <td data-label="Acciones">
                     <button className="btn btn-ghost btn-sm" onClick={() => openMovs(p)}>Movimientos</button>
                   </td>
                 </tr>
@@ -104,11 +104,11 @@ export default function Stock() {
                   <tbody>
                     {movs.map(m => (
                       <tr key={m.Id}>
-                        <td>{m.tipo}</td>
-                        <td className="td-mono">{m.cantidad}</td>
-                        <td className="td-mono">{m.usuario_Id ?? '—'}</td>
-                        <td className="td-mono">{m.fecha ? new Date(m.fecha).toLocaleString() : '—'}</td>
-                        <td>{m.descripcion || '—'}</td>
+                        <td data-label="Tipo">{m.tipo}</td>
+                        <td className="td-mono" data-label="Cantidad">{m.cantidad}</td>
+                        <td className="td-mono" data-label="Usuario">{m.usuario_Id ?? '—'}</td>
+                        <td className="td-mono" data-label="Fecha">{m.fecha ? new Date(m.fecha).toLocaleString() : '—'}</td>
+                        <td data-label="Desc">{m.descripcion || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

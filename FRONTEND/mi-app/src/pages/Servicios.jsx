@@ -153,23 +153,23 @@ export default function Servicios() {
               <tbody>
                 {filtered.map(row => (
                   <tr key={row.Id}>
-                    <td className="td-mono">#{row.Id}</td>
-                    <td className="td-primary">{row.nombre}</td>
-                    <td style={{ color: 'var(--slate-500)', fontSize: '0.82rem', maxWidth: 280,
+                    <td className="td-mono" data-label="ID">#{row.Id}</td>
+                    <td className="td-primary" data-label="Nombre">{row.nombre}</td>
+                    <td data-label="Descripción" style={{ color: 'var(--slate-500)', fontSize: '0.82rem', maxWidth: 280,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {row.descripcion || '—'}
                     </td>
-                    <td>
+                    <td data-label="Costo">
                       <span style={{ fontWeight: 700, color: 'var(--slate-900)', fontFamily: 'var(--font-mono)' }}>
                         ${Number(row.costo).toLocaleString()}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Estatus">
                       <span className={`badge ${row.estatus ? 'badge-active' : 'badge-inactive'}`}>
                         {row.estatus ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="td-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => openEdit(row)}>Editar</button>
                         <button className="btn btn-danger btn-sm" onClick={() => openDelete(row)}>Eliminar</button>

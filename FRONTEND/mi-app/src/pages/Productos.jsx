@@ -70,13 +70,13 @@ export default function Productos() {
               <tbody>
                 {rows.map(r => (
                   <tr key={r.id}>
-                    <td className="td-mono">#{r.id}</td>
-                    <td>{r.Descripcion || `Prod ${r.id}`}</td>
-                    <td className="td-mono">{r.Costo_Total}</td>
-                    <td className="td-mono">{r.Descuento ?? '—'}</td>
-                    <td className="td-mono">{r.stock ?? 0}</td>
-                    <td>{r.estatus ? 'Activo' : 'Inactivo'}</td>
-                    <td>
+                    <td className="td-mono" data-label="ID">#{r.id}</td>
+                    <td data-label="Descripción">{r.Descripcion || `Prod ${r.id}`}</td>
+                    <td className="td-mono" data-label="Costo">{r.Costo_Total}</td>
+                    <td className="td-mono" data-label="Descuento">{r.Descuento ?? '—'}</td>
+                    <td className="td-mono" data-label="Stock">{r.stock ?? 0}</td>
+                    <td data-label="Estatus">{r.estatus ? 'Activo' : 'Inactivo'}</td>
+                    <td data-label="Acciones">
                       <button className="btn btn-ghost btn-sm" onClick={() => openEdit(r)}>Editar</button>
                       <button className="btn btn-danger btn-sm" onClick={() => openDelete(r)}>Eliminar</button>
                     </td>

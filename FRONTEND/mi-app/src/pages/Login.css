@@ -188,6 +188,20 @@
   gap: 2rem;
 }
 
+/* Responsive: stack layout on small screens */
+@media (max-width: 900px) {
+  .login-container { flex-direction: column; }
+  .login-hero { display: none; }
+  .login-form-panel { padding: 1.25rem; }
+  .form-wrapper { max-width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .form-wrapper { padding: 0.5rem; }
+  .form-header h1 { font-size: 1.25rem; }
+  .login-btn { padding: 0.65rem; font-size: 0.92rem; }
+}
+
 /* ─── Encabezado del formulario ──────────────────────────────── */
 .form-header h1 {
   font-size: 1.75rem;

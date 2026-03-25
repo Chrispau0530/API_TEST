@@ -113,23 +113,23 @@ export default function Clientes() {
               <tbody>
                 {filtered.map(row => (
                   <tr key={row.Id}>
-                    <td className="td-mono">#{row.Id}</td>
-                    <td className="td-primary">{row.nombre} {row.papellido} {row.sapellido}</td>
-                    <td className="td-mono">{row.telefono || '—'}</td>
-                    <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className="td-mono" data-label="ID">#{row.Id}</td>
+                    <td className="td-primary" data-label="Nombre">{row.nombre} {row.papellido} {row.sapellido}</td>
+                    <td className="td-mono" data-label="Teléfono">{row.telefono || '—'}</td>
+                    <td data-label="Dirección" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {row.direccion || '—'}
                     </td>
-                    <td>
+                    <td data-label="Estatus">
                       <span className={`badge ${row.estatus ? 'badge-active' : 'badge-inactive'}`}>
                         {row.estatus ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="td-mono">
+                    <td className="td-mono" data-label="Registro">
                       {row.fecha_registro
                         ? new Date(row.fecha_registro).toLocaleDateString('es-MX')
                         : '—'}
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="td-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => openEdit(row)}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

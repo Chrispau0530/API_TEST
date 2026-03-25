@@ -29,6 +29,13 @@
   align-items: center;
 }
 
+@media (max-width: 640px) {
+  .navbar-container { padding: 0 0.75rem; }
+  .navbar-logo { font-size: 1.1rem; }
+  .navbar-menu { gap: 0.5rem; }
+  .logout-btn { padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+}
+
 .logout-btn {
   background-color: #e74c3c;
   color: white;

@@ -371,6 +371,81 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Tables responsive wrapper */
+.table-wrap { overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; min-width: 640px; }
+
+/* Modals responsive */
+.modal { max-width: 720px; width: 90%; }
+
+/* Form grid fallback on small screens */
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+/* ── Responsive: Tablets / Mobile ── */
+@media (max-width: 1024px) {
+  :root { --sidebar-width: 64px; }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: auto; height: 56px; width: 100%; display: flex; align-items: center; padding: 0 0.5rem; overflow-x: auto; }
+  .sidebar-logo { display: none; }
+  .sidebar-nav { display: flex; gap: 0.5rem; padding: 0; }
+  /* Mantener los items en una sola fila sin wrap, permitir scroll horizontal si hay overflow */
+  .sidebar-nav { flex-wrap: nowrap; white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sidebar-nav .nav-item { flex: 0 0 auto; min-width: 64px; }
+  .nav-section-label, .nav-item-text, .sidebar-user { display: none; }
+  .main-content { margin-left: 0; }
+  .topbar { height: 56px; padding: 0 0.9rem; }
+  .topbar-right { gap: 0.5rem; display: flex; align-items: center; flex-wrap: nowrap; }
+  .page-body { padding: 1rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .stat-card { padding: 1rem; }
+}
+
+@media (max-width: 640px) {
+  .page-body { padding: 0.75rem; }
+  .topbar-left h1 { font-size: 1rem; }
+  .topbar-left p { display: none; }
+  .modal { max-width: 94%; }
+  .form-wrapper { max-width: 100%; padding: 0.75rem; }
+  .table-wrap table { min-width: 520px; }
+  .nav-item { padding: 0.5rem; font-size: 0.85rem; }
+}
+
+/* Mobile drawer (overlay) */
+.mobile-overlay { display: none; }
+@media (max-width: 1024px) {
+  /* On mobile, open sidebar as a top horizontal bar (not a full-screen drawer) */
+  .sidebar.mobile-open {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 56px;
+    width: 100%;
+    z-index: 120;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--sidebar-border);
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    transform: translateY(0);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Show nav items inline and keep labels hidden to save space */
+  .sidebar.mobile-open .nav-section-label,
+  .sidebar.mobile-open .nav-item-text,
+  .sidebar.mobile-open .sidebar-user,
+  .sidebar.mobile-open .sidebar-logo { display: none; }
+  .sidebar.mobile-open .sidebar-logo { display: none; }
+  .sidebar.mobile-open .nav-item { display: inline-flex; flex: 0 0 auto; padding: 0.55rem 0.8rem; margin: 0 0.25rem; }
+  .mobile-overlay { display: none; }
+}
+
+/* Topbar hamburger button (visible on small screens) */
+.topbar-hamburger { display: none; border: none; background: transparent; margin-right: 0.5rem; cursor: pointer; }
+@media (max-width: 1024px) {
+  .topbar-hamburger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; background: transparent; color: var(--slate-700); }
+}
+
 /* Stat cards */
 .stats-grid {
   display: grid;
@@ -867,4 +942,23 @@ tbody td {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .page-body { padding: 1rem; }
   .topbar { padding: 0 1rem; }
+}
+
+/* Responsive table: transform rows into cards on very small screens */
+@media (max-width: 640px) {
+  table thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tbody tr { margin-bottom: 0.75rem; background: var(--bg-card); border-radius: 8px; padding: 0.6rem; box-shadow: var(--shadow-sm); }
+  tbody td { padding: 0.45rem 0.6rem; border: none; display: flex; justify-content: space-between; align-items: center; }
+  tbody td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    color: var(--slate-400);
+    font-size: 0.72rem;
+    margin-right: 0.6rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .td-actions { justify-content: flex-end; }
+  .table-wrap { overflow: visible; }
 }

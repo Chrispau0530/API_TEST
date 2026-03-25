@@ -30,6 +30,7 @@ const NAV = [
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -38,6 +39,10 @@ export default function Layout() {
     logout()
     navigate('/login')
   }
+
+  const toggleMobile = () => setMobileOpen(v => !v)
+
+  const closeMobile = () => setMobileOpen(false)
 
   // Título dinámico según ruta
   const pageTitle = {
@@ -56,7 +61,7 @@ export default function Layout() {
   return (
     <div className="app-shell">
       {/* ─── Sidebar ─────────────────────────── */}
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Logo */}
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">
@@ -92,6 +97,7 @@ export default function Layout() {
                   end={to === '/dashboard'}
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                   data-label={label}
+                  onClick={closeMobile}
                 >
                   <span className="nav-item-icon">{icon}</span>
                   <span className="nav-item-text">{label}</span>
@@ -114,6 +120,13 @@ export default function Layout() {
       {/* ─── Main ────────────────────────────── */}
       <div className={`main-content ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <header className="topbar">
+          <button className="topbar-hamburger" onClick={toggleMobile} aria-label="Toggle menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
           <div className="topbar-left">
             <h1>{pageTitle.title}</h1>
             {pageTitle.sub && <p>{pageTitle.sub}</p>}
@@ -140,6 +153,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      {mobileOpen && <div className="mobile-overlay" onClick={closeMobile} />}
     </div>
   )
 }

@@ -148,16 +148,16 @@ export default function ServiciosDetalle() {
               <tbody>
                 {filtered.map((row, i) => (
                   <tr key={row.servicio_id}>
-                    <td className="td-mono">{String(i + 1).padStart(2, '0')}</td>
-                    <td className="td-primary">{row.nombre_cajero}</td>
-                    <td>{row.nombre_operativo}</td>
-                    <td>{row.modelo_vehiculo}</td>
-                    <td>
+                    <td className="td-mono" data-label="#">{String(i + 1).padStart(2, '0')}</td>
+                    <td className="td-primary" data-label="Cajero">{row.nombre_cajero}</td>
+                    <td data-label="Lavador">{row.nombre_operativo}</td>
+                    <td data-label="Vehículo">{row.modelo_vehiculo}</td>
+                    <td data-label="Placas">
                       <span className="badge badge-blue" style={{ letterSpacing: '0.05em', fontFamily: 'var(--font-mono)' }}>
                         {row.placas_vehiculo}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Color">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <span style={{
                           width: 10, height: 10, borderRadius: '50%',
@@ -167,13 +167,13 @@ export default function ServiciosDetalle() {
                         {row.color_vehiculo}
                       </div>
                     </td>
-                    <td className="td-mono">${Number(row.costo_servicio).toLocaleString()}</td>
-                    <td>
+                    <td className="td-mono" data-label="Costo Serv.">${Number(row.costo_servicio).toLocaleString()}</td>
+                    <td data-label="Total">
                       <span style={{ fontWeight: 700, color: 'var(--slate-900)', fontFamily: 'var(--font-mono)' }}>
                         ${Number(row.costo_total).toLocaleString()}
                       </span>
                     </td>
-                    <td className="td-mono">
+                    <td className="td-mono" data-label="Hora">
                       {row.fecha_servicio
                         ? new Date(row.fecha_servicio).toLocaleTimeString('es-MX', {
                             hour: '2-digit', minute: '2-digit'

@@ -181,17 +181,17 @@ export default function Usuarios() {
                             <tbody>
                                 {filtered.map(row => (
                                     <tr key={row.Id}>
-                                        <td className="td-mono">#{row.Id}</td>
-                                        <td className="td-primary">{row.nombre} {row.papellido}</td>
-                                        <td className="td-mono">{row.usuario}</td>
-                                        <td><span className="badge badge-blue">{rolName(row.rol_Id)}</span></td>
-                                        <td>{row.telefono || '—'}</td>
-                                        <td>
+                                        <td className="td-mono" data-label="ID">#{row.Id}</td>
+                                        <td className="td-primary" data-label="Nombre">{row.nombre} {row.papellido}</td>
+                                        <td className="td-mono" data-label="Usuario">{row.usuario}</td>
+                                        <td data-label="Rol"><span className="badge badge-blue">{rolName(row.rol_Id)}</span></td>
+                                        <td data-label="Teléfono">{row.telefono || '—'}</td>
+                                        <td data-label="Estatus">
                                             <span className={`badge ${row.estatus ? 'badge-active' : 'badge-inactive'}`}>
                                                 {row.estatus ? 'Activo' : 'Inactivo'}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Acciones">
                                             <div className="td-actions">
                                                 <button className="btn btn-ghost btn-sm" onClick={() => openEdit(row)}>
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
