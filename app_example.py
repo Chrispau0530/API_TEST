@@ -70,6 +70,11 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    # Si accidentalmente el cliente envía el hash completo en lugar de la contraseña clara,
+    # devolvemos un mensaje distinto para depuración en frontend.
+    if isinstance(form_data.password, str) and form_data.password.startswith('$pbkdf2-sha256$'):
+        raise HTTPException(status_code=400, detail="Ingresa la contraseña original en texto plano, no el hash")
+
     user = db.query(User).filter(User.usuario == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.contrasena):

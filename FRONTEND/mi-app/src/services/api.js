@@ -35,11 +35,25 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: (username, password) => {
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('password', password)
-    return api.post('/login', formData)
+    const body = new URLSearchParams()
+    body.append('username', username)
+    body.append('password', password)
+
+    return api.post('/login', body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
   }
+}
+
+export const usuariosAPI = {
+  getAll: () => api.get('/usuarios/'),
+  getById: (id) => api.get(`/usuarios/${id}`),
+  create: (data) => api.post('/usuarios/', data),
+  update: (id, data) => api.put(`/usuarios/${id}`, data),
+  delete: (id) => api.delete(`/usuarios/${id}`),
+  resetPassword: (data) => api.post('/reset-password', data)
 }
 
 export const rolesAPI = {
@@ -48,14 +62,6 @@ export const rolesAPI = {
   create: (data) => api.post('/roles/', data),
   update: (id, data) => api.put(`/roles/${id}`, data),
   delete: (id) => api.delete(`/roles/${id}`)
-}
-
-export const usuariosAPI = {
-  getAll: () => api.get('/usuarios/'),
-  getById: (id) => api.get(`/usuarios/${id}`),
-  create: (data) => api.post('/usuarios/', data),
-  update: (id, data) => api.put(`/usuarios/{id}`, data),
-  delete: (id) => api.delete(`/usuarios/${id}`)
 }
 
 export const clientesAPI = {

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { authAPI } from '../services/api'
+import { authAPI, usuariosAPI } from '../services/api'
 
 const AuthContext = createContext()
 
@@ -42,6 +42,20 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  const register = async (userData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await usuariosAPI.create(userData)
+      return true
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Error en registro')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const value = {
     user,
     token,
@@ -49,6 +63,7 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     logout,
+    register,
     isAuthenticated: !!token
   }
 

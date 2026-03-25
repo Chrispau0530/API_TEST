@@ -1,104 +1,445 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ─── Variables ─────────────────────────────────────────────── */
+:root {
+  --blue-900: #0a1628;
+  --blue-800: #0d1f3c;
+  --blue-600: #1a3a6b;
+  --blue-500: #1e4db7;
+  --blue-400: #2563eb;
+  --blue-300: #3b82f6;
+  --accent:   #4f8ef7;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --input-bg: #f8fafc;
+  --white: #ffffff;
+  --error: #ef4444;
+  --radius: 6px;
+  --font: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', monospace;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Layout ─────────────────────────────────────────────────── */
 .login-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: var(--font);
 }
 
-.login-box {
-  background: white;
-  padding: 2rem;
+/* ─── Hero (izquierda) ───────────────────────────────────────── */
+.login-hero {
+  position: relative;
+  flex: 0 0 45%;
+  background:
+    url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format')
+    center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(5, 15, 45, 0.92) 0%,
+    rgba(10, 30, 80, 0.80) 50%,
+    rgba(15, 40, 100, 0.70) 100%
+  );
+  z-index: 1;
+}
+
+/* Efecto de grid sutil */
+.login-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79, 142, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 142, 247, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem;
+}
+
+.hero-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--white);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(79, 142, 247, 0.25);
+  border: 1px solid rgba(79, 142, 247, 0.4);
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  color: var(--accent);
+}
+
+.logo-name {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hero-text {
+  padding: 1rem 0;
+}
+
+.hero-text h2 {
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.hero-text p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  max-width: 30ch;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem 1.4rem;
+  backdrop-filter: blur(8px);
+  width: fit-content;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hero-footer {
+  position: relative;
+  z-index: 3;
+  padding: 1.5rem 2.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Panel de formulario (derecha) ─────────────────────────── */
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  padding: 2rem;
+}
+
+.form-wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-.login-box h1 {
-  margin: 0;
-  text-align: center;
-  color: #2c3e50;
-  font-size: 2rem;
+/* ─── Encabezado del formulario ──────────────────────────────── */
+.form-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.4rem;
 }
 
-.login-box p {
-  text-align: center;
-  color: #7f8c8d;
-  margin-top: 0.5rem;
-  margin-bottom: 2rem;
+.form-header p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Campos ─────────────────────────────────────────────────── */
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
 }
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgot-link {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: var(--blue-400);
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font);
+  transition: color 0.2s;
+}
+
+.forgot-link:hover { color: var(--blue-300); }
 
 .form-group input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  transition: border-color 0.3s;
+  padding: 0.7rem 0.9rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
 }
 
+.form-group input::placeholder { color: var(--text-muted); }
+
 .form-group input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--blue-400);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+  background: var(--white);
 }
 
 .form-group input:disabled {
-  background-color: #ecf0f1;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.error-message {
-  background-color: #e74c3c;
-  color: white;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+/* Password con ojo */
+.input-password-wrapper {
+  position: relative;
 }
 
+.input-password-wrapper input {
+  padding-right: 2.8rem;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.toggle-password:hover { color: var(--text-secondary); }
+
+/* ─── Checkbox ───────────────────────────────────────────────── */
+.checkbox-row { margin: 0.25rem 0; }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] { display: none; }
+
+.checkmark {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.checkbox-label input:checked ~ .checkmark {
+  background: var(--blue-400);
+  border-color: var(--blue-400);
+}
+
+.checkbox-label input:checked ~ .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid white;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ─── Error ──────────────────────────────────────────────────── */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--error);
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+/* ─── Botón ──────────────────────────────────────────────────── */
 .login-btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #667eea;
-  color: white;
+  padding: 0.75rem 1.25rem;
+  background: var(--blue-400);
+  color: var(--white);
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
   font-weight: 600;
+  font-family: var(--font);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .login-btn:hover:not(:disabled) {
-  background-color: #764ba2;
+  background: var(--blue-500);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
 }
+
+.login-btn:active:not(:disabled) { transform: translateY(0); }
 
 .login-btn:disabled {
-  background-color: #95a5a6;
+  background: var(--text-muted);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.login-tip {
+.btn-content, .btn-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Link contacto ──────────────────────────────────────────── */
+.contact-admin {
   text-align: center;
-  color: #7f8c8d;
-  font-size: 0.85rem;
-  margin-top: 1.5rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
 }
 
-.login-tip strong {
-  color: #667eea;
+.contact-admin a {
+  color: var(--blue-400);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-admin a:hover { text-decoration: underline; }
+
+/* ─── Footer del formulario ──────────────────────────────────── */
+.form-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.form-footer span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .login-container { flex-direction: column; }
+  .login-hero {
+    flex: 0 0 220px;
+    min-height: 220px;
+  }
+  .hero-text h2 { font-size: 1.4rem; }
+  .hero-stats { display: none; }
+  .login-form-panel { padding: 2rem 1.5rem; }
 }
