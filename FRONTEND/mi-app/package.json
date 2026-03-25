@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
+    "ngrok": "^5.0.0-beta.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^6.20.0"
