@@ -153,7 +153,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
-      {mobileOpen && <div className="mobile-overlay" onClick={closeMobile} />}
+     <div className={`mobile-overlay ${mobileOpen ? 'active' : ''}`} onClick={closeMobile} />
     </div>
   )
 }
